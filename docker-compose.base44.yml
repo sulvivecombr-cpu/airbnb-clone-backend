@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: on-failure
+    environment:
+      - POSTGRES_DB=airbnb_clone
+      - POSTGRES_USER=codecake
+      - POSTGRES_PASSWORD=codecake
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - /tmp/init-airbnb-schema.sql:/docker-entrypoint-initdb.d/init-airbnb-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codecake -d airbnb_clone"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  app:
+    image: maven:3.9.5-eclipse-temurin-21
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:8080"
+    volumes:
+      - .:/app
+      - maven-cache:/root/.m2
+    working_dir: /app
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/airbnb_clone
+      - SPRING_DATASOURCE_USERNAME=codecake
+      - SPRING_DATASOURCE_PASSWORD=codecake
+      - SPRING_DOCKER_COMPOSE_ENABLED=false
+    env_file:
+      - /run/base44/app.env
+    command: ["sh", "-ec", "mvn spring-boot:run -DskipTests"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -o /dev/null http://localhost:8080/assets/countries.json || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 300s
+
+volumes:
+  postgres-data:
+  maven-cache:

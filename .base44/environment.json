@@ -1,0 +1,19 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/assets/countries.json",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "AUTH0_CLIENT_ID",
+      "description": "Auth0 application Client ID from the Auth0 dashboard",
+      "requiredAtBoot": true,
+      "generatedForDevelopment": true
+    },
+    {
+      "name": "AUTH0_CLIENT_SECRET",
+      "description": "Auth0 application Client Secret from the Auth0 dashboard",
+      "requiredAtBoot": true,
+      "generatedForDevelopment": true
+    }
+  ]
+}
