@@ -16,14 +16,14 @@ services:
       retries: 10
       start_period: 10s
 
-  app:
+  backend:
     image: maven:3.9.5-eclipse-temurin-21
     restart: on-failure
     depends_on:
       postgres:
         condition: service_healthy
     ports:
-      - "3000:8080"
+      - "8000:8080"
     volumes:
       - .:/app
       - maven-cache:/root/.m2
@@ -44,6 +44,29 @@ services:
       retries: 6
       start_period: 300s
 
+  frontend:
+    image: node:20
+    restart: on-failure
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:4200"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+      - npm-cache:/root/.npm
+    working_dir: /app
+    command: ["sh", "-ec", "npm install && npx ng serve --host 0.0.0.0 --port 4200 --disable-host-check"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -o /dev/null http://localhost:4200/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 120s
+
 volumes:
   postgres-data:
   maven-cache:
+  frontend-node-modules:
+  npm-cache:
